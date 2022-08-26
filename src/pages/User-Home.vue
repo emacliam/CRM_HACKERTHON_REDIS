@@ -462,15 +462,17 @@ export default {
             issues_data: null,
         }
     },
-    async mounted() {
-        //connecting to our host
+
+    async created() {
         this.socket = io('redis-crm-api.herokuapp.com', {
             transports: ['websocket'],
             secure: true,
             reconnection: true,
             rejectUnauthorized: false,
         })
+    },
 
+    async mounted() {
         this.socket.on('connect_error', (error) => {
             console.log(error)
         })
