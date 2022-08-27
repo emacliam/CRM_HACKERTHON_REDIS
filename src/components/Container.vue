@@ -471,7 +471,9 @@ export default {
         const router = useRouter()
         const navigation = ref()
         const ROLE = watchEffect(() => {
-            if (props.role == 'AGENT') {
+            console.log(props.role)
+            if (props.role === 'AGENT') {
+                console.log('agent')
                 navigation.value = nav
             } else {
                 navigation.value = nav1

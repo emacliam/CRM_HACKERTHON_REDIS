@@ -30,33 +30,17 @@ import ToastService from 'primevue/toastservice'
 import Toast from 'primevue/toast'
 
 /* socket IO */
-/* import VueSocketIO from 'vue-3-socket.io'
-const socket = new VueSocketIO({
-    debug: true,
-    connection: 'https://redis-crm-api.herokuapp.com',
-    vuex: {
-        store,
-        actionPrefix: 'SOCKET_',
-        mutationPrefix: 'SOCKET_',
-    },
-}) */
+/* import VueSocketIOExt from 'vue-socket.io-extended'
+import io from 'socket.io-client'
 
-/* import SocketIO from 'socket.io-client'
-const socket = new VueSocketIO({
-    debug: true,
-    connection: SocketIO('https://redis-crm-api.herokuapp.com'), //options object is Optional
-    vuex: {
-        store,
-        actionPrefix: 'SOCKET_',
-        mutationPrefix: 'SOCKET_',
-    },
-}) */
+const socket = io('http://10.15.20.184:5000') */
 
 createApp(App)
     .use(router)
     .use(store)
     .use(VueToast)
     .use(PrimeVue)
+    /*     .use(VueSocketIOExt, socket) */
     .use(ToastService)
     .component('AppLayout', AppLayout)
     .component('Container', Container)

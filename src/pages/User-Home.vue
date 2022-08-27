@@ -1,5 +1,5 @@
 <template>
-    <Container ROLE="'CUSTOMER'">
+    <Container ROLE="CUSTOMER">
         <main class="flex-1">
             <!-- Page title & actions -->
             <div
@@ -67,8 +67,14 @@
             </div>
 
             <!-- Pinned ISS -->
-            <div class="px-4 mt-6 sm:px-6 lg:px-8">
+            <div class="flex justify-start px-4 mt-6 space-x-4 sm:px-6 lg:px-8">
                 <span>Your Issues</span>
+                <ProgressSpinner
+                    v-if="loading"
+                    style="width: 20px; height: 20px"
+                    strokeWidth="8"
+                    animationDuration=".5s"
+                />
             </div>
 
             <!-- Projects list (only on smallest breakpoint) -->
@@ -80,32 +86,22 @@
                         Queries
                     </h2>
                 </div>
+
                 <ul
                     role="list"
                     class="mt-3 border-t border-gray-200 divide-y divide-gray-100"
                 >
-                    <li v-for="project in ISS" :key="project.id">
+                    <li v-for="project in issues" :key="project.pk">
                         <a
                             href="#"
                             class="flex items-center justify-between px-4 py-4 group hover:bg-gray-50 sm:px-6"
                         >
                             <span class="flex items-center space-x-3 truncate">
                                 <span
-                                    :class="[
-                                        project.bgColorClass,
-                                        'w-2.5 h-2.5 flex-shrink-0 rounded-full',
-                                    ]"
-                                    aria-hidden="true"
-                                />
-                                <span
                                     class="text-sm font-medium leading-6 truncate"
                                 >
-                                    {{ project.title }}
+                                    {{ project.subject }}
                                     {{ ' ' }}
-                                    <span
-                                        class="font-normal text-gray-500 truncate"
-                                        >in {{ project.team }}</span
-                                    >
                                 </span>
                             </span>
                             <ChevronRightIcon
@@ -133,7 +129,7 @@
                                 <th
                                     class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase border-b border-gray-200 bg-gray-50"
                                 >
-                                    Active
+                                    Description
                                 </th>
                                 <th
                                     class="hidden px-6 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase border-b border-gray-200 md:table-cell bg-gray-50"
@@ -145,10 +141,11 @@
                                 />
                             </tr>
                         </thead>
+
                         <tbody class="bg-white divide-y divide-gray-100">
                             <tr
-                                v-for="project in ISS"
-                                :key="project.id"
+                                v-for="project in issues"
+                                :key="project.pk"
                                 class="cursor-pointer hover:bg-gray-100"
                             >
                                 <td
@@ -157,66 +154,43 @@
                                     <div
                                         class="flex items-center space-x-3 lg:pl-2"
                                     >
-                                        <div
-                                            :class="[
-                                                project.bgColorClass,
-                                                'flex-shrink-0 w-2.5 h-2.5 rounded-full',
-                                            ]"
-                                            aria-hidden="true"
-                                        />
                                         <a
                                             href="#"
                                             class="truncate hover:text-gray-600"
                                         >
                                             <span>
-                                                {{ project.title }}
-                                                {{ ' ' }}
-                                                <span
-                                                    class="font-normal text-gray-500"
-                                                    >in {{ project.team }}</span
-                                                >
+                                                {{ project.subject }}
                                             </span>
                                         </a>
                                     </div>
                                 </td>
                                 <td
-                                    class="px-6 py-3 text-sm font-medium text-gray-500"
+                                    class="w-full px-6 py-3 text-sm font-medium text-gray-900 max-w-0 whitespace-nowrap"
                                 >
-                                    <div class="flex items-center space-x-2">
-                                        <div
-                                            class="flex flex-shrink-0 -space-x-1"
+                                    <div
+                                        class="flex items-center space-x-3 lg:pl-2"
+                                    >
+                                        <a
+                                            href="#"
+                                            class="truncate hover:text-gray-600"
                                         >
-                                            <img
-                                                v-for="member in project.members"
-                                                :key="member.handle"
-                                                class="w-6 h-6 rounded-full max-w-none ring-2 ring-white"
-                                                :src="member.imageUrl"
-                                                :alt="member.name"
-                                            />
-                                        </div>
-                                        <span
-                                            v-if="
-                                                project.totalMembers >
-                                                project.members.length
-                                            "
-                                            class="flex-shrink-0 text-xs font-medium leading-5"
-                                            >+{{
-                                                project.totalMembers -
-                                                project.members.length
-                                            }}</span
-                                        >
+                                            <span>
+                                                {{ project.description }}
+                                            </span>
+                                        </a>
                                     </div>
                                 </td>
+
                                 <td
                                     class="hidden px-6 py-3 text-sm text-right text-gray-500 md:table-cell whitespace-nowrap"
                                 >
-                                    {{ project.lastUpdated }}
+                                    {{ project.created_at }}
                                 </td>
                                 <td
                                     class="px-6 py-3 text-sm font-medium text-right whitespace-nowrap"
                                 >
                                     <a
-                                        href="/Chat"
+                                        @click="JOIN_ROOM(project.pk)"
                                         class="text-indigo-600 hover:text-indigo-900"
                                         >Go to Chat</a
                                     >
@@ -231,7 +205,7 @@
 </template>
 
 <script>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import {
     Dialog,
     DialogOverlay,
@@ -262,158 +236,6 @@ const navigation = [
     { name: 'Home', href: '#', icon: HomeIcon, current: true },
     { name: 'Chats', href: '#', icon: ViewListIcon, current: false },
 ]
-const issues = [
-    { name: 'Unresolved Issues', href: '#', bgColorClass: 'bg-red-500' },
-    { name: 'Pending', href: '#', bgColorClass: 'bg-green-500' },
-]
-const ISS = [
-    {
-        id: 1,
-        title: 'LOGIN NOT WORKING',
-        initials: 'GA',
-        team: 'Engineering',
-        members: [
-            {
-                name: 'Dries Vincent',
-                handle: 'driesvincent',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Lindsay Walton',
-                handle: 'lindsaywalton',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-        ],
-        totalMembers: 2,
-        lastUpdated: 'March 17, 2020',
-        pinned: true,
-        bgColorClass: 'bg-green-600',
-    },
-    {
-        id: 1,
-        title: 'LOGIN NOT WORKING',
-        initials: 'GA',
-        team: 'Engineering',
-        members: [
-            {
-                name: 'Dries Vincent',
-                handle: 'driesvincent',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Lindsay Walton',
-                handle: 'lindsaywalton',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-        ],
-        totalMembers: 2,
-        lastUpdated: 'March 17, 2020',
-        pinned: true,
-        bgColorClass: 'bg-green-600',
-    },
-    {
-        id: 1,
-        title: 'LOGIN NOT WORKING',
-        initials: 'GA',
-        team: 'Engineering',
-        members: [
-            {
-                name: 'Dries Vincent',
-                handle: 'driesvincent',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Lindsay Walton',
-                handle: 'lindsaywalton',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-        ],
-        totalMembers: 2,
-        lastUpdated: 'March 17, 2020',
-        pinned: true,
-        bgColorClass: 'bg-green-600',
-    },
-    {
-        id: 1,
-        title: 'LOGIN NOT WORKING',
-        initials: 'GA',
-        team: 'Engineering',
-        members: [
-            {
-                name: 'Dries Vincent',
-                handle: 'driesvincent',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Lindsay Walton',
-                handle: 'lindsaywalton',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-        ],
-        totalMembers: 2,
-        lastUpdated: 'March 17, 2020',
-        pinned: true,
-        bgColorClass: 'bg-green-600',
-    },
-    {
-        id: 1,
-        title: 'LOGIN NOT WORKING',
-        initials: 'GA',
-        team: 'Engineering',
-        members: [
-            {
-                name: 'Dries Vincent',
-                handle: 'driesvincent',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Lindsay Walton',
-                handle: 'lindsaywalton',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-        ],
-        totalMembers: 2,
-        lastUpdated: 'March 17, 2020',
-        pinned: true,
-        bgColorClass: 'bg-green-600',
-    },
-    {
-        id: 1,
-        title: 'LOGIN NOT WORKING',
-        initials: 'GA',
-        team: 'Engineering',
-        members: [
-            {
-                name: 'Dries Vincent',
-                handle: 'driesvincent',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Lindsay Walton',
-                handle: 'lindsaywalton',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-        ],
-        totalMembers: 2,
-        lastUpdated: 'March 17, 2020',
-        pinned: true,
-        bgColorClass: 'bg-green-600',
-    },
-
-    // More ISS...
-]
 
 const ACTIVE_REPS = [
     {
@@ -441,76 +263,26 @@ const ACTIVE_REPS = [
         bgColorClass: 'bg-green-600',
     },
 ]
-const pinnedProjects = ISS.filter((project) => project.pinned)
 import IssuesService from '../services/Issues'
-import { io } from 'socket.io-client'
-
+//import { io } from 'socket.io-client'
+const socket = io('ws://10.15.20.184:5000')
 export default {
     name: 'UserHome',
     components: {
         ChevronRightIcon,
     },
 
-    data() {
-        return {
-            socket: {},
-            issue: {
-                subject: '',
-                description: '',
-                sender: this.$store.state.auth.user.pk,
-            },
-            issues_data: null,
-        }
-    },
-
-    async created() {
-        this.socket = io('redis-crm-api.herokuapp.com', {
-            transports: ['websocket'],
-            secure: true,
-            reconnection: true,
-            rejectUnauthorized: false,
-        })
-    },
-
-    async mounted() {
-        this.socket.on('connect_error', (error) => {
-            console.log(error)
-        })
-
-        this.socket.on('connect', (data) => {
-            console.log('socket connected successfully')
-            console.log(data)
-        })
-
-        this.socket.on('disconnect', (error) => {
-            console.log('socket disconnected')
-            console.log(error)
-        })
-    },
-    methods: {
-        async POST_ISSUE() {
-            try {
-                const data = {
-                    ...this.issue,
-                }
-                console.log(data)
-                const response = await this.socket.emit('add-issue', data)
-                console.log(response)
-            } catch (error) {}
-        },
-    },
-    /*   mounted(){
-this.sockets.subscribe('add-issue-response', (data) => {
-    this.issues_data = data
-});
-    },
-    beforeUnmount(){
-this.sockets.unsubscribe('add-issue-response');
-    }, */
     setup() {
         const sidebarOpen = ref(false)
         const router = useRouter()
         const store = useStore()
+        const issues = ref([])
+        const issue = ref({
+            subject: '',
+            description: '',
+            sender: store.state.auth.user.pk,
+        })
+        const loading = ref(false)
 
         const admin = computed(() => {
             if (store.getters['auth/user'].role === 'CUSTOMER') {
@@ -524,6 +296,33 @@ this.sockets.unsubscribe('add-issue-response');
                 router.push('/Dashboard')
             }
             FETCH_ISSUES(store.getters['auth/user'].pk)
+            socket.on('connect', () => {
+                console.log(socket.connected)
+            })
+
+            socket.on('disconnect', () => {
+                socket.connect()
+                console.log('connected false')
+            })
+
+            socket.on('add-issue-response', (response) => {
+                //TODO: CHECK RESPONSE STATUS
+                issues.value = [response.data, ...issues.value]
+                console.log(issues.value)
+                console.log(response.data)
+                loading.value = false
+            })
+
+            socket.on('join-room-response', (response) => {
+                console.log(response)
+                console.log(receive_id.value)
+                //TODO: CHECK RESPONSE STATUS
+                router.push(`/Chat/${receive_id.value}`)
+            })
+        })
+
+        onUnmounted(() => {
+            socket.close()
         })
 
         function NavigateToChat(id) {
@@ -532,19 +331,60 @@ this.sockets.unsubscribe('add-issue-response');
 
         async function FETCH_ISSUES(id) {
             try {
+                loading.value = true
                 const response = await IssuesService.getbyCustomer(id)
-                console.log(response)
-            } catch (c) {}
+                console.log(response.data.data)
+                issues.value = response.data.data.reverse()
+                loading.value = false
+            } catch (error) {
+                loading.value = false
+                console.log(error)
+            }
+        }
+        async function POST_ISSUE() {
+            try {
+                const data = {
+                    ...issue.value,
+                }
+                loading.value = true
+                const response = socket.emit('add-issue', data, (data) => {
+                    console.log(data)
+                })
+            } catch (error) {
+                loading.value = false
+                console.log(error)
+            }
+        }
+
+        const receive_id = ref('')
+        async function JOIN_ROOM(id) {
+            receive_id.value = id
+            try {
+                const data = {
+                    issue_id: id,
+                    first_name: store.state.auth.user.first_name,
+                    last_name: store.state.auth.user.last_name,
+                }
+                loading.value = true
+                socket.emit('join-room', data, (data) => {
+                    console.log(data)
+                })
+            } catch (error) {
+                loading.value = false
+                console.log(error)
+            }
         }
 
         return {
             navigation,
             issues,
-            ISS,
+            issue,
+            POST_ISSUE,
+            JOIN_ROOM,
             ACTIVE_REPS,
-            pinnedProjects,
             sidebarOpen,
             NavigateToChat,
+            loading,
         }
     },
 }

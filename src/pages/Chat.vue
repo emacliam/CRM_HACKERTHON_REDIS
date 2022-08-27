@@ -330,7 +330,7 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import {
     Dialog,
     DialogOverlay,
@@ -431,6 +431,9 @@ const message = {
         },
     ],
 }
+import MessageService from '../services/message'
+import { useRoute } from 'vue-router'
+const socket = io('ws://10.15.20.184:5000')
 
 export default {
     components: {
@@ -450,36 +453,78 @@ export default {
 
         UserAddIcon,
     },
-    sockets: {
-        connect: function () {
-            console.log('socket connected')
-        },
-        customEmit: function (data) {
-            console.log(
-                'this method was fired by the socket server. eg: io.emit("customEmit", data)'
-            )
-        },
-    },
+
     data() {
-        return {
-            msg: '',
-        }
-    },
-    mounted() {
-        this.sockets.subscribe('EVENT_NAME', (data) => {
-            this.msg = data.message
-        })
-    },
-    beforeMount() {
-        this.sockets.unsubscribe('EVENT_NAME')
+        return {}
     },
     methods: {},
     setup() {
         const open = ref(false)
+        const messages = ref([])
+        const MESSAGE = ref([])
+        const route = useRoute()
+        const loading = ref(false)
+
+        onMounted(() => {
+            FETCH_MESSAGES(route.params.id)
+            socket.on('connect', () => {
+                console.log(socket.connected)
+            })
+
+            socket.on('disconnect', () => {
+                socket.connect()
+                console.log('connected false')
+            })
+
+            socket.on('change-issue-status-response', (response) => {
+                //TODO: CHECK RESPONSE STATUS
+                console.log('issue status changed')
+            })
+
+            socket.on('receive_message', (response) => {
+                console.log(response.data)
+            })
+        })
+
+        onUnmounted(() => {
+            socket.close()
+        })
+
+        async function FETCH_MESSAGES(ID) {
+            try {
+                loading.value = true
+                const response = await MessageService.getAll(ID)
+                console.log(response.data.data)
+                loading.value = false
+            } catch (error) {
+                loading.value = false
+                console.log(error)
+            }
+        }
+
+        async function SEND_MESSAGE(id) {
+            try {
+                const data = {
+                    issue_id: id,
+                    sender: store.state.auth.user.pk,
+                    message_body: MESSAGE.value,
+                }
+                loading.value = true
+                socket.emit('send_message', data, (data) => {
+                    console.log(data)
+                })
+            } catch (error) {
+                loading.value = false
+                console.log(error)
+            }
+        }
+
         return {
             sidebarNavigation,
             message,
             open,
+            loading,
+            SEND_MESSAGE,
         }
     },
 }

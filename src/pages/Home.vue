@@ -1,5 +1,5 @@
 <template>
-    <Container role="'AGENT'">
+    <Container role="AGENT">
         <main class="flex-1">
             <!-- Page title & actions -->
             <div
@@ -81,6 +81,12 @@
                     </li>
                 </ul>
             </div>
+            <ProgressSpinner
+                v-if="loading"
+                style="width: 20px; height: 20px"
+                strokeWidth="8"
+                animationDuration=".5s"
+            />
 
             <!-- Projects list (only on smallest breakpoint) -->
             <div class="mt-10 sm:hidden">
@@ -95,28 +101,16 @@
                     role="list"
                     class="mt-3 border-t border-gray-200 divide-y divide-gray-100"
                 >
-                    <li v-for="project in ISS" :key="project.id">
+                    <li v-for="project in issues" :key="project.pk">
                         <a
                             href="#"
                             class="flex items-center justify-between px-4 py-4 group hover:bg-gray-50 sm:px-6"
                         >
                             <span class="flex items-center space-x-3 truncate">
                                 <span
-                                    :class="[
-                                        project.bgColorClass,
-                                        'w-2.5 h-2.5 flex-shrink-0 rounded-full',
-                                    ]"
-                                    aria-hidden="true"
-                                />
-                                <span
                                     class="text-sm font-medium leading-6 truncate"
                                 >
-                                    {{ project.title }}
-                                    {{ ' ' }}
-                                    <span
-                                        class="font-normal text-gray-500 truncate"
-                                        >in {{ project.team }}</span
-                                    >
+                                    {{ project.subject }}
                                 </span>
                             </span>
                             <ChevronRightIcon
@@ -144,7 +138,7 @@
                                 <th
                                     class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase border-b border-gray-200 bg-gray-50"
                                 >
-                                    Active
+                                    Description
                                 </th>
                                 <th
                                     class="hidden px-6 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase border-b border-gray-200 md:table-cell bg-gray-50"
@@ -164,8 +158,8 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-100">
                             <tr
-                                v-for="project in ISS"
-                                :key="project.id"
+                                v-for="project in issues"
+                                :key="project.pk"
                                 class="cursor-pointer hover:bg-gray-100"
                             >
                                 <td
@@ -174,66 +168,43 @@
                                     <div
                                         class="flex items-center space-x-3 lg:pl-2"
                                     >
-                                        <div
-                                            :class="[
-                                                project.bgColorClass,
-                                                'flex-shrink-0 w-2.5 h-2.5 rounded-full',
-                                            ]"
-                                            aria-hidden="true"
-                                        />
                                         <a
                                             href="#"
                                             class="truncate hover:text-gray-600"
                                         >
                                             <span>
-                                                {{ project.title }}
-                                                {{ ' ' }}
-                                                <span
-                                                    class="font-normal text-gray-500"
-                                                    >in {{ project.team }}</span
-                                                >
+                                                {{ project.subject }}
                                             </span>
                                         </a>
                                     </div>
                                 </td>
                                 <td
-                                    class="px-6 py-3 text-sm font-medium text-gray-500"
+                                    class="w-full px-6 py-3 text-sm font-medium text-gray-900 max-w-0 whitespace-nowrap"
                                 >
-                                    <div class="flex items-center space-x-2">
-                                        <div
-                                            class="flex flex-shrink-0 -space-x-1"
+                                    <div
+                                        class="flex items-center space-x-3 lg:pl-2"
+                                    >
+                                        <a
+                                            href="#"
+                                            class="truncate hover:text-gray-600"
                                         >
-                                            <img
-                                                v-for="member in project.members"
-                                                :key="member.handle"
-                                                class="w-6 h-6 rounded-full max-w-none ring-2 ring-white"
-                                                :src="member.imageUrl"
-                                                :alt="member.name"
-                                            />
-                                        </div>
-                                        <span
-                                            v-if="
-                                                project.totalMembers >
-                                                project.members.length
-                                            "
-                                            class="flex-shrink-0 text-xs font-medium leading-5"
-                                            >+{{
-                                                project.totalMembers -
-                                                project.members.length
-                                            }}</span
-                                        >
+                                            <span>
+                                                {{ project.description }}
+                                            </span>
+                                        </a>
                                     </div>
                                 </td>
+
                                 <td
                                     class="hidden px-6 py-3 text-sm text-right text-gray-500 md:table-cell whitespace-nowrap"
                                 >
-                                    {{ project.lastUpdated }}
+                                    {{ project.created_at }}
                                 </td>
                                 <td
                                     class="px-6 py-3 text-sm font-medium text-right whitespace-nowrap"
                                 >
                                     <a
-                                        href="/Chat"
+                                        @click="JOIN_ROOM(project.pk)"
                                         class="text-indigo-600 hover:text-indigo-900"
                                         >Go to Chat</a
                                     >
@@ -284,7 +255,7 @@
 </template>
 
 <script>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import {
     Dialog,
     DialogOverlay,
@@ -497,6 +468,8 @@ const ACTIVE_REPS = [
     },
 ]
 const pinnedProjects = ISS.filter((project) => project.pinned)
+import IssuesService from '../services/Issues'
+const socket = io('ws://10.15.20.184:5000')
 
 export default {
     name: 'HomePage',
@@ -512,6 +485,9 @@ export default {
         const sidebarOpen = ref(false)
         const router = useRouter()
         const store = useStore()
+        const issues = ref([])
+
+        const loading = ref(false)
         const admin = computed(() => {
             if (store.getters['auth/user'].role === 'AGENT') {
                 return true
@@ -519,21 +495,104 @@ export default {
                 return false
             }
         })
+
         onMounted(() => {
             console.log(admin.value)
             if (admin.value == false) {
                 router.push('/CustomerDashboard')
             }
+            FETCH_ISSUES(store.getters['auth/user'].pk)
+            socket.on('connect', () => {
+                console.log(socket.connected)
+            })
+
+            socket.on('disconnect', () => {
+                socket.connect()
+                console.log('connected false')
+            })
+
+            socket.on('add-issue-response', (response) => {
+                //TODO: CHECK RESPONSE STATUS
+                loading.value = true
+                issues.value = [response.data, ...issues.value]
+                loading.value = false
+            })
+
+            socket.on('change-issue-status-response', (response) => {
+                //TODO: CHECK RESPONSE STATUS
+                console.log('issue status changed')
+            })
+
+            socket.on('join-room-response', (response) => {
+                //TODO: CHECK RESPONSE STATUS
+                router.push(`/Chat/${receive_id.value}`)
+            })
+        })
+
+        onUnmounted(() => {
+            socket.close()
         })
 
         function NavigateToChat(id) {
             router.push('Chat')
         }
+        async function FETCH_ISSUES(id) {
+            try {
+                loading.value = true
+                const response = await IssuesService.getAll()
+                console.log(response.data.data)
+                issues.value = response.data.data.reverse()
+                loading.value = false
+            } catch (error) {
+                loading.value = false
+                console.log(error)
+            }
+        }
+
+        async function CHANGE_ISSUE_STATUS(id, status) {
+            try {
+                const data = {
+                    issue_id: id,
+                    issue_status: status,
+                }
+                loading.value = true
+                const response = socket.emit(
+                    'change-issue-status',
+                    data,
+                    (data) => {
+                        console.log(data)
+                    }
+                )
+            } catch (error) {
+                loading.value = false
+                console.log(error)
+            }
+        }
+        const receive_id = ref('')
+        async function JOIN_ROOM(id) {
+            receive_id.value = id
+            try {
+                const data = {
+                    issue_id: id,
+                    first_name: store.state.auth.user.first_name,
+                    last_name: store.state.auth.user.last_name,
+                }
+                loading.value = true
+                socket.emit('join-room', data, (data) => {
+                    console.log(data)
+                })
+            } catch (error) {
+                loading.value = false
+                console.log(error)
+            }
+        }
 
         return {
             navigation,
             issues,
+            loading,
             ISS,
+            JOIN_ROOM,
             ACTIVE_REPS,
             pinnedProjects,
             sidebarOpen,
