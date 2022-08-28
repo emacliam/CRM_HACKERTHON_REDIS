@@ -55,11 +55,11 @@
                             </div>
                         </TransitionChild>
                         <div class="flex items-center flex-shrink-0 px-4">
-                            <img
-                                class="w-auto h-8"
-                                src="https://tailwindui.com/img/logos/workflow-logo-purple-500-mark-gray-700-text.svg"
-                                alt="Workflow"
-                            />
+                            <div
+                                class="w-auto h-8 text-3xl font-bold text-center text-primary-dark"
+                            >
+                                CRM
+                            </div>
                         </div>
                         <div class="flex-1 h-0 mt-5 overflow-y-auto">
                             <nav class="px-2">
@@ -106,19 +106,22 @@
             class="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:border-r lg:border-gray-200 lg:pt-5 lg:pb-4 lg:bg-gray-100"
         >
             <div class="flex items-center flex-shrink-0 px-6">
-                <img
-                    class="w-auto h-8"
-                    src="https://tailwindui.com/img/logos/workflow-logo-purple-500-mark-gray-700-text.svg"
-                    alt="ServiceFlow"
-                />
+                <div
+                    class="w-auto h-8 text-3xl font-bold text-center text-primary-dark"
+                >
+                    CRM
+                </div>
             </div>
             <!-- Sidebar component, swap this element with another sidebar if you like -->
             <div class="flex flex-col flex-1 h-0 mt-6 overflow-y-auto">
                 <!-- User account dropdown -->
-                <Menu as="div" class="relative inline-block px-3 text-left">
+                <Menu
+                    as="div"
+                    class="relative inline-block px-3 mb-8 text-left"
+                >
                     <div>
                         <MenuButton
-                            class="group border border-gray-300 w-full my-2 bg-gray-100 rounded-md px-3.5 py-2 text-sm text-left font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-purple-500"
+                            class="group border border-gray-300 w-full my-2 bg-gray-100 rounded-md px-3.5 py-2 text-sm text-left font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-primary-light"
                         >
                             <span
                                 class="flex items-center justify-between w-full"
@@ -126,11 +129,9 @@
                                 <span
                                     class="flex items-center justify-between min-w-0 space-x-3"
                                 >
-                                    <img
-                                        class="flex-shrink-0 w-10 h-10 bg-gray-300 rounded-full"
-                                        src="https://images.unsplash.com/photo-1502685104226-ee32379fefbe?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=3&w=256&h=256&q=80"
-                                        alt=""
-                                    />
+                                    <div
+                                        class="flex-shrink-0 w-10 h-10 bg-gray-500 rounded-full"
+                                    ></div>
                                     <span class="flex flex-col flex-1 min-w-0">
                                         <span
                                             class="text-sm font-medium text-gray-900 truncate"
@@ -161,33 +162,6 @@
                         <MenuItems
                             class="absolute left-0 right-0 z-10 mx-3 mt-1 origin-top bg-white divide-y divide-gray-200 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
                         >
-                            <div class="py-1">
-                                <MenuItem v-slot="{ active }">
-                                    <a
-                                        href="#"
-                                        :class="[
-                                            active
-                                                ? 'bg-gray-100 text-gray-900'
-                                                : 'text-gray-700',
-                                            'block px-4 py-2 text-sm',
-                                        ]"
-                                        >View profile</a
-                                    >
-                                </MenuItem>
-                                <MenuItem v-slot="{ active }">
-                                    <a
-                                        href="#"
-                                        :class="[
-                                            active
-                                                ? 'bg-gray-100 text-gray-900'
-                                                : 'text-gray-700',
-                                            'block px-4 py-2 text-sm',
-                                        ]"
-                                        >Settings</a
-                                    >
-                                </MenuItem>
-                            </div>
-
                             <div class="py-1">
                                 <MenuItem v-slot="{ active }">
                                     <a
@@ -245,7 +219,7 @@
             >
                 <button
                     type="button"
-                    class="px-4 text-gray-500 border-r border-gray-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-500 lg:hidden"
+                    class="px-4 text-gray-500 border-r border-gray-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-light lg:hidden"
                     @click="sidebarOpen = true"
                 >
                     <span class="sr-only">Open sidebar</span>
@@ -257,14 +231,13 @@
                         <Menu as="div" class="relative ml-3">
                             <div>
                                 <MenuButton
-                                    class="flex items-center max-w-xs text-sm bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                                    class="flex items-center max-w-xs text-sm bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-light"
                                 >
                                     <span class="sr-only">Open user menu</span>
-                                    <img
-                                        class="w-8 h-8 rounded-full"
-                                        src="https://images.unsplash.com/photo-1502685104226-ee32379fefbe?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                                        alt=""
-                                    />
+
+                                    <div
+                                        class="w-8 h-8 bg-gray-500 rounded-full"
+                                    ></div>
                                 </MenuButton>
                             </div>
                             <transition
@@ -276,35 +249,8 @@
                                 leave-to-class="transform scale-95 opacity-0"
                             >
                                 <MenuItems
-                                    class="absolute right-0 w-48 mt-2 origin-top-right bg-white divide-y divide-gray-200 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                                    class="absolute right-[-20] w-48 mt-2 origin-top-right bg-white divide-y divide-gray-200 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
                                 >
-                                    <div class="py-1">
-                                        <MenuItem v-slot="{ active }">
-                                            <a
-                                                href="#"
-                                                :class="[
-                                                    active
-                                                        ? 'bg-gray-100 text-gray-900'
-                                                        : 'text-gray-700',
-                                                    'block px-4 py-2 text-sm',
-                                                ]"
-                                                >View profile</a
-                                            >
-                                        </MenuItem>
-                                        <MenuItem v-slot="{ active }">
-                                            <a
-                                                href="#"
-                                                :class="[
-                                                    active
-                                                        ? 'bg-gray-100 text-gray-900'
-                                                        : 'text-gray-700',
-                                                    'block px-4 py-2 text-sm',
-                                                ]"
-                                                >Settings</a
-                                            >
-                                        </MenuItem>
-                                    </div>
-
                                     <div class="py-1">
                                         <MenuItem v-slot="{ active }">
                                             <a
@@ -352,6 +298,7 @@ import {
     ArchiveIcon,
     CheckCircleIcon,
     XCircleIcon,
+    ArrowCircleRightIcon,
 } from '@heroicons/vue/outline'
 import {
     ChevronRightIcon,
@@ -365,12 +312,17 @@ import { useRouter } from 'vue-router'
 
 const nav = [
     { name: 'Home', href: '/Dashboard', icon: HomeIcon, current: false },
-    { name: 'Chats', href: '/Chat', icon: ChatIcon, current: false },
-    { name: 'Archived', href: '/Archived', icon: ArchiveIcon, current: false },
+
     {
-        name: 'Unresolved',
-        href: '/Unresolved',
-        icon: XCircleIcon,
+        name: 'Archived',
+        href: '/ArchivedIssues',
+        icon: ArchiveIcon,
+        current: false,
+    },
+    {
+        name: 'Open',
+        href: '/open',
+        icon: ArrowCircleRightIcon,
         current: false,
     },
     {
@@ -382,8 +334,19 @@ const nav = [
 ]
 
 const nav1 = [
-    { name: 'Home', href: '/Dashboard', icon: HomeIcon, current: false },
-    { name: 'Chats', href: '/Chat', icon: ChatIcon, current: false },
+    { name: 'Dashboard', href: '/Dashboard', icon: HomeIcon, current: false },
+    {
+        name: 'Unresolved',
+        href: '/archived',
+        icon: XCircleIcon,
+        current: false,
+    },
+    {
+        name: 'Resolved',
+        href: '/closed',
+        icon: CheckCircleIcon,
+        current: false,
+    },
 ]
 const issues = [
     { name: 'Unresolved Issues', href: '#', bgColorClass: 'bg-red-500' },
@@ -469,22 +432,13 @@ export default {
         const sidebarOpen = ref(false)
         const store = useStore()
         const router = useRouter()
-        const navigation = ref()
-        const ROLE = watchEffect(() => {
-            console.log(props.role)
-            if (props.role === 'AGENT') {
-                console.log('agent')
-                navigation.value = nav
-            } else {
-                navigation.value = nav1
-            }
-        })
 
         return {
-            navigation,
+            navigation: computed(() =>
+                store.getters['auth/user'].role === 'AGENT' ? nav : nav1
+            ),
             issues,
             ISS,
-            ROLE,
             ACTIVE_REPS,
             pinnedProjects,
             sidebarOpen,

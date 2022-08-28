@@ -1,5 +1,5 @@
 <template>
-    <Container>
+    <Container ROLE="AGENT">
         <main class="flex-1">
             <!-- Page title & actions -->
             <div
@@ -12,6 +12,17 @@
                 </h1>
             </div>
 
+            <!-- Pinned ISS -->
+            <div class="flex justify-start px-4 mt-6 space-x-4 sm:px-6 lg:px-8">
+                <span>Your Issues</span>
+                <ProgressSpinner
+                    v-if="loading"
+                    style="width: 20px; height: 20px"
+                    strokeWidth="8"
+                    animationDuration=".5s"
+                />
+            </div>
+
             <!-- Projects list (only on smallest breakpoint) -->
             <div class="mt-10 sm:hidden">
                 <div class="px-4 sm:px-6">
@@ -21,32 +32,22 @@
                         Queries
                     </h2>
                 </div>
+
                 <ul
                     role="list"
                     class="mt-3 border-t border-gray-200 divide-y divide-gray-100"
                 >
-                    <li v-for="project in ISS" :key="project.id">
+                    <li v-for="ISSUE in issues" :key="ISSUE.pk">
                         <a
                             href="#"
                             class="flex items-center justify-between px-4 py-4 group hover:bg-gray-50 sm:px-6"
                         >
                             <span class="flex items-center space-x-3 truncate">
                                 <span
-                                    :class="[
-                                        project.bgColorClass,
-                                        'w-2.5 h-2.5 flex-shrink-0 rounded-full',
-                                    ]"
-                                    aria-hidden="true"
-                                />
-                                <span
                                     class="text-sm font-medium leading-6 truncate"
                                 >
-                                    {{ project.title }}
+                                    {{ ISSUE.subject }}
                                     {{ ' ' }}
-                                    <span
-                                        class="font-normal text-gray-500 truncate"
-                                        >in {{ project.team }}</span
-                                    >
                                 </span>
                             </span>
                             <ChevronRightIcon
@@ -56,6 +57,9 @@
                         </a>
                     </li>
                 </ul>
+                <div v-if="issues.length == 0" class="text-center">
+                    <span>No issues found</span>
+                </div>
             </div>
 
             <!-- Projects table (small breakpoint and up) -->
@@ -71,29 +75,26 @@
                                 >
                                     <span class="lg:pl-2">Queries</span>
                                 </th>
-
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase border-b border-gray-200 bg-gray-50"
+                                >
+                                    Description
+                                </th>
                                 <th
                                     class="hidden px-6 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase border-b border-gray-200 md:table-cell bg-gray-50"
                                 >
-                                    created On
+                                    created At
                                 </th>
-                                <th
-                                    class="py-3 pr-6 text-xs font-medium tracking-wider text-right text-gray-500 uppercase border-b border-gray-200 bg-gray-50"
-                                >
-                                    archived On
-                                </th>
-                                <th
-                                    class="py-3 pr-6 text-xs font-medium tracking-wider text-right text-gray-500 uppercase border-b border-gray-200 bg-gray-50"
-                                />
                                 <th
                                     class="py-3 pr-6 text-xs font-medium tracking-wider text-right text-gray-500 uppercase border-b border-gray-200 bg-gray-50"
                                 />
                             </tr>
                         </thead>
+
                         <tbody class="bg-white divide-y divide-gray-100">
                             <tr
-                                v-for="project in ISS"
-                                :key="project.id"
+                                v-for="ISSUE in issues"
+                                :key="ISSUE.pk"
                                 class="cursor-pointer hover:bg-gray-100"
                             >
                                 <td
@@ -102,24 +103,28 @@
                                     <div
                                         class="flex items-center space-x-3 lg:pl-2"
                                     >
-                                        <div
-                                            :class="[
-                                                project.bgColorClass,
-                                                'flex-shrink-0 w-2.5 h-2.5 rounded-full',
-                                            ]"
-                                            aria-hidden="true"
-                                        />
                                         <a
                                             href="#"
                                             class="truncate hover:text-gray-600"
                                         >
                                             <span>
-                                                {{ project.title }}
-                                                {{ ' ' }}
-                                                <span
-                                                    class="font-normal text-gray-500"
-                                                    >in {{ project.team }}</span
-                                                >
+                                                {{ ISSUE.subject }}
+                                            </span>
+                                        </a>
+                                    </div>
+                                </td>
+                                <td
+                                    class="w-full px-6 py-3 text-sm font-medium text-gray-900 max-w-0 whitespace-nowrap"
+                                >
+                                    <div
+                                        class="flex items-center space-x-3 lg:pl-2"
+                                    >
+                                        <a
+                                            href="#"
+                                            class="truncate hover:text-gray-600"
+                                        >
+                                            <span>
+                                                {{ ISSUE.description }}
                                             </span>
                                         </a>
                                     </div>
@@ -128,25 +133,14 @@
                                 <td
                                     class="hidden px-6 py-3 text-sm text-right text-gray-500 md:table-cell whitespace-nowrap"
                                 >
-                                    {{ project.lastUpdated }}
-                                </td>
-                                <td
-                                    class="hidden px-6 py-3 text-sm text-right text-gray-500 md:table-cell whitespace-nowrap"
-                                >
-                                    {{ project.lastUpdated }}
-                                </td>
-                                <td
-                                    class="px-6 py-3 text-sm font-medium text-right whitespace-nowrap"
-                                >
-                                    <a
-                                        href=""
-                                        class="text-indigo-600 hover:text-indigo-900"
-                                        >View Details</a
-                                    >
+                                    {{ ISSUE.created_at }}
                                 </td>
                             </tr>
                         </tbody>
                     </table>
+                    <div v-if="issues.length == 0" class="text-center">
+                        <span>No issues found</span>
+                    </div>
                 </div>
             </div>
         </main>
@@ -154,7 +148,7 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import {
     Dialog,
     DialogOverlay,
@@ -179,173 +173,82 @@ import {
     SelectorIcon,
 } from '@heroicons/vue/solid'
 import { useRouter } from 'vue-router'
+import { useStore } from 'vuex'
 
-const ISS = [
-    {
-        id: 1,
-        title: 'LOGIN NOT WORKING',
-        initials: 'GA',
-        team: 'Engineering',
-        members: [
-            {
-                name: 'Dries Vincent',
-                handle: 'driesvincent',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Lindsay Walton',
-                handle: 'lindsaywalton',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-        ],
-        totalMembers: 2,
-        lastUpdated: 'March 17, 2020',
-        pinned: true,
-        bgColorClass: 'bg-green-600',
-    },
-    {
-        id: 1,
-        title: 'LOGIN NOT WORKING',
-        initials: 'GA',
-        team: 'Engineering',
-        members: [
-            {
-                name: 'Dries Vincent',
-                handle: 'driesvincent',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Lindsay Walton',
-                handle: 'lindsaywalton',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-        ],
-        totalMembers: 2,
-        lastUpdated: 'March 17, 2020',
-        pinned: true,
-        bgColorClass: 'bg-green-600',
-    },
-    {
-        id: 1,
-        title: 'LOGIN NOT WORKING',
-        initials: 'GA',
-        team: 'Engineering',
-        members: [
-            {
-                name: 'Dries Vincent',
-                handle: 'driesvincent',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Lindsay Walton',
-                handle: 'lindsaywalton',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-        ],
-        totalMembers: 2,
-        lastUpdated: 'March 17, 2020',
-        pinned: true,
-        bgColorClass: 'bg-green-600',
-    },
-    {
-        id: 1,
-        title: 'LOGIN NOT WORKING',
-        initials: 'GA',
-        team: 'Engineering',
-        members: [
-            {
-                name: 'Dries Vincent',
-                handle: 'driesvincent',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Lindsay Walton',
-                handle: 'lindsaywalton',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-        ],
-        totalMembers: 2,
-        lastUpdated: 'March 17, 2020',
-        pinned: true,
-        bgColorClass: 'bg-green-600',
-    },
-    {
-        id: 1,
-        title: 'LOGIN NOT WORKING',
-        initials: 'GA',
-        team: 'Engineering',
-        members: [
-            {
-                name: 'Dries Vincent',
-                handle: 'driesvincent',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Lindsay Walton',
-                handle: 'lindsaywalton',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-        ],
-        totalMembers: 2,
-        lastUpdated: 'March 17, 2020',
-        pinned: true,
-        bgColorClass: 'bg-green-600',
-    },
-    {
-        id: 1,
-        title: 'LOGIN NOT WORKING',
-        initials: 'GA',
-        team: 'Engineering',
-        members: [
-            {
-                name: 'Dries Vincent',
-                handle: 'driesvincent',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Lindsay Walton',
-                handle: 'lindsaywalton',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-        ],
-        totalMembers: 2,
-        lastUpdated: 'March 17, 2020',
-        pinned: true,
-        bgColorClass: 'bg-green-600',
-    },
-
-    // More ISS...
+const navigation = [
+    { name: 'Home', href: '#', icon: HomeIcon, current: true },
+    { name: 'Chats', href: '#', icon: ViewListIcon, current: false },
 ]
 
+const ACTIVE_REPS = [
+    {
+        id: 1,
+        title: 'LOGIN NOT WORKING',
+        initials: 'GA',
+        team: 'Engineering',
+        members: [
+            {
+                name: 'Dries Vincent',
+                handle: 'driesvincent',
+                imageUrl:
+                    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+            },
+            {
+                name: 'Lindsay Walton',
+                handle: 'lindsaywalton',
+                imageUrl:
+                    'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+            },
+        ],
+        totalMembers: 2,
+        lastUpdated: 'March 17, 2020',
+        pinned: true,
+        bgColorClass: 'bg-green-600',
+    },
+]
+import IssuesService from '../services/Issues'
+//import { io } from 'socket.io-client'
+
 export default {
-    name: 'HomePage',
     components: {
         ChevronRightIcon,
     },
+
     setup() {
         const sidebarOpen = ref(false)
         const router = useRouter()
+        const store = useStore()
+        const issues = ref([])
+        const issue = ref({
+            subject: '',
+            description: '',
+            sender: store.state.auth.user.pk,
+        })
+        const loading = ref(false)
 
-        function NavigateToChat(id) {
-            router.push('Chat')
+        onMounted(() => {
+            FETCH_ISSUES(store.getters['auth/user'].pk)
+        })
+        async function FETCH_ISSUES(id) {
+            try {
+                loading.value = true
+                const response = await IssuesService.getAll('CLOSED')
+                console.log(response.data.data)
+                issues.value = response.data.data
+                loading.value = false
+            } catch (error) {
+                loading.value = false
+                console.log(error)
+            }
         }
 
         return {
-            ISS,
+            navigation,
+            issues,
+            issue,
+            ACTIVE_REPS,
             sidebarOpen,
-            NavigateToChat,
+            loading,
         }
     },
 }

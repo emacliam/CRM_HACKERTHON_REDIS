@@ -1,6 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '/src/pages/Home.vue'
 import CustomerHome from '/src/pages/User-Home.vue'
+import UserClosed from '/src/pages/User-Closed.vue'
+import UserPending from '/src/pages/User-Pending.vue'
+
 import Chat from '/src/pages/Chat.vue'
 import Resolved from '/src/pages/Resolved.vue'
 import Archived from '/src/pages/Archived.vue'
@@ -35,6 +38,18 @@ const routes = [
         meta: { requiresAuth: true, agent: true },
     },
     {
+        path: '/closed',
+        name: 'UserClosed',
+        component: UserClosed,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/archived',
+        name: 'UserPending',
+        component: UserPending,
+        meta: { requiresAuth: true },
+    },
+    {
         path: '/Chat/:id',
         name: 'Chat',
         component: Chat,
@@ -47,13 +62,13 @@ const routes = [
         meta: { requiresAuth: true, agent: true },
     },
     {
-        path: '/Unresolved',
+        path: '/open',
         name: 'Unresolved',
         component: Unresolved,
         meta: { requiresAuth: true, agent: true },
     },
     {
-        path: '/Archived',
+        path: '/ArchivedIssues',
         name: 'Archived',
         component: Archived,
         meta: {

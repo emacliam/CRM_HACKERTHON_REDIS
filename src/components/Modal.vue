@@ -81,7 +81,7 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, watch, watchEffect } from 'vue'
 import {
     Dialog,
     DialogOverlay,
@@ -92,7 +92,7 @@ import {
 import { ExclamationIcon, XIcon } from '@heroicons/vue/outline'
 
 export default {
-    props: ['title'],
+    props: ['title', 'click'],
     name: 'ModalComponent',
     components: {
         Dialog,
@@ -100,20 +100,24 @@ export default {
         DialogTitle,
         TransitionChild,
         TransitionRoot,
-        ExclamationIcon,
         XIcon,
     },
     setup(props) {
         const open = ref(false)
         const Title = ref(props.title)
         const clicked = () => {
-            open.value = true
+            open.value = !open.value
         }
+
+        watch(props.click, () => {
+            clicked()
+        })
 
         return {
             open,
             clicked,
             Title,
+            clk: props.click,
         }
     },
 }

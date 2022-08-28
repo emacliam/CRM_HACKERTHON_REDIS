@@ -8,11 +8,11 @@
                 <h1
                     class="text-lg font-bold leading-6 text-gray-900 sm:truncate"
                 >
-                    Dashboard
+                    Your Dashboard
                 </h1>
 
                 <div class="flex mt-4 sm:mt-0 sm:ml-4">
-                    <Modal title="Create Issue">
+                    <Modal title="Create Issue" :click="mdl">
                         <form action="" class="w-[430px] mb-4">
                             <div>
                                 <label
@@ -65,7 +65,53 @@
                     </Modal>
                 </div>
             </div>
-
+            <div class="px-4 mt-6 sm:px-6 lg:px-8">
+                <ul
+                    role="list"
+                    class="grid grid-cols-1 gap-4 mt-3 sm:gap-6 sm:grid-cols-2 xl:grid-cols-4"
+                >
+                    <li class="relative flex col-span-1 rounded-md shadow-sm">
+                        <div
+                            :class="[
+                                'flex-shrink-0 bg-primary-dark flex items-center justify-center w-16 text-white text-sm font-medium rounded-l-md',
+                            ]"
+                        ></div>
+                        <div
+                            class="flex items-center justify-between flex-1 truncate bg-white border-t border-b border-r border-gray-200 rounded-r-md"
+                        >
+                            <div class="flex-1 px-4 py-2 text-sm truncate">
+                                <a
+                                    href="#"
+                                    class="font-medium text-gray-900 hover:text-gray-600"
+                                >
+                                    PENDING ISSUES
+                                </a>
+                                <p class="text-gray-500">2</p>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="relative flex col-span-1 rounded-md shadow-sm">
+                        <div
+                            :class="[
+                                'flex-shrink-0 bg-primary-dark flex items-center justify-center w-16 text-white text-sm font-medium rounded-l-md',
+                            ]"
+                        ></div>
+                        <div
+                            class="flex items-center justify-between flex-1 truncate bg-white border-t border-b border-r border-gray-200 rounded-r-md"
+                        >
+                            <div class="flex-1 px-4 py-2 text-sm truncate">
+                                <a
+                                    href="#"
+                                    class="font-medium text-gray-900 hover:text-gray-600"
+                                >
+                                    CLOSE ISSUES
+                                </a>
+                                <p class="text-gray-500">2</p>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
             <!-- Pinned ISS -->
             <div class="flex justify-start px-4 mt-6 space-x-4 sm:px-6 lg:px-8">
                 <span>Your Issues</span>
@@ -92,13 +138,20 @@
                     class="mt-3 border-t border-gray-200 divide-y divide-gray-100"
                 >
                     <li
-                        v-for="project in issues"
-                        :key="project.pk"
-                        :class="
-                            active.includes(project.pk) ? 'bg-pink-100' : ''
-                        "
+                        v-for="ISSUE in issues.filter(
+                            (iss) =>
+                                iss.issue_status !== 'CLOSED' &&
+                                iss.issue_status !== 'PENDING'
+                        )"
+                        :key="ISSUE.pk"
+                        :class="active.includes(ISSUE.pk) ? 'bg-pink-100' : ''"
                     >
                         <a
+                            @click="
+                                active.includes(ISSUE.pk)
+                                    ? JOIN_ROOM(ISSUE.pk, ISSUE)
+                                    : ''
+                            "
                             href="#"
                             class="flex items-center justify-between px-4 py-4 group hover:bg-gray-50 sm:px-6"
                         >
@@ -106,7 +159,7 @@
                                 <span
                                     class="text-sm font-medium leading-6 truncate"
                                 >
-                                    {{ project.subject }}
+                                    {{ ISSUE.subject }}
                                     {{ ' ' }}
                                 </span>
                             </span>
@@ -117,6 +170,9 @@
                         </a>
                     </li>
                 </ul>
+                <div v-if="issues.length == 0" class="text-center">
+                    <span>No issues found</span>
+                </div>
             </div>
 
             <!-- Projects table (small breakpoint and up) -->
@@ -150,11 +206,15 @@
 
                         <tbody class="bg-white divide-y divide-gray-100">
                             <tr
-                                v-for="project in issues"
-                                :key="project.pk"
+                                v-for="ISSUE in issues.filter(
+                                    (iss) =>
+                                        iss.issue_status !== 'CLOSED' &&
+                                        iss.issue_status !== 'PENDING'
+                                )"
+                                :key="ISSUE.pk"
                                 class="cursor-pointer hover:bg-gray-100"
                                 :class="
-                                    active.includes(project.pk)
+                                    active.includes(ISSUE.pk)
                                         ? 'bg-pink-100'
                                         : ''
                                 "
@@ -170,7 +230,7 @@
                                             class="truncate hover:text-gray-600"
                                         >
                                             <span>
-                                                {{ project.subject }}
+                                                {{ ISSUE.subject }}
                                             </span>
                                         </a>
                                     </div>
@@ -186,7 +246,7 @@
                                             class="truncate hover:text-gray-600"
                                         >
                                             <span>
-                                                {{ project.description }}
+                                                {{ ISSUE.description }}
                                             </span>
                                         </a>
                                     </div>
@@ -195,14 +255,14 @@
                                 <td
                                     class="hidden px-6 py-3 text-sm text-right text-gray-500 md:table-cell whitespace-nowrap"
                                 >
-                                    {{ project.created_at }}
+                                    {{ ISSUE.created_at }}
                                 </td>
                                 <td
                                     class="px-6 py-3 text-sm font-medium text-right whitespace-nowrap"
                                 >
                                     <a
-                                        v-if="active.includes(project.pk)"
-                                        @click="JOIN_ROOM(project.pk)"
+                                        v-if="active.includes(ISSUE.pk)"
+                                        @click="JOIN_ROOM(ISSUE.pk, ISSUE)"
                                         class="text-indigo-600 hover:text-indigo-900"
                                         >Go to Chat</a
                                     >
@@ -210,6 +270,9 @@
                             </tr>
                         </tbody>
                     </table>
+                    <div v-if="issues.length == 0" class="text-center">
+                        <span>No issues found</span>
+                    </div>
                 </div>
             </div>
         </main>
@@ -277,7 +340,8 @@ const ACTIVE_REPS = [
 ]
 import IssuesService from '../services/Issues'
 //import { io } from 'socket.io-client'
-const socket = io('ws://10.15.20.184:5000')
+import { url } from '../../config.js'
+const socket = io('ws://' + url)
 export default {
     name: 'UserHome',
     components: {
@@ -349,6 +413,12 @@ export default {
             socket.on('receive-message', (response) => {
                 console.log(response.data)
             })
+
+            socket.on('change-issue-status-response', (response) => {
+                //TODO: CHECK RESPONSE STATUS
+                FETCH_ISSUES(store.getters['auth/user'].pk)
+                console.log('issue status changed')
+            })
         })
 
         onUnmounted(() => {
@@ -371,13 +441,24 @@ export default {
                 console.log(error)
             }
         }
+
+        const modal = ref(false)
         async function POST_ISSUE() {
+            if (
+                !issue.value.description ||
+                !issue.value.sender ||
+                !issue.value.subject
+            ) {
+                modal.value = !modal.value
+                return
+            }
             try {
                 const data = {
                     ...issue.value,
                 }
                 loading.value = true
-                const response = socket.emit('add-issue', data, (data) => {
+                modal.value = !modal.value
+                socket.emit('add-issue', data, (data) => {
                     console.log(data)
                 })
             } catch (error) {
@@ -387,8 +468,9 @@ export default {
         }
 
         const receive_id = ref('')
-        async function JOIN_ROOM(id) {
+        async function JOIN_ROOM(id, issue) {
             receive_id.value = id
+            await store.dispatch('issue/Save_Issue', issue)
             try {
                 const data = {
                     issue_id: id,
@@ -417,6 +499,8 @@ export default {
             NavigateToChat,
             active: computed(() => chatInit.value),
             loading,
+            modal,
+            mdl: computed(() => modal.value),
         }
     },
 }

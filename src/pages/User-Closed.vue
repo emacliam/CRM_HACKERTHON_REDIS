@@ -1,5 +1,5 @@
 <template>
-    <Container ROLE="AGENT">
+    <Container ROLE="CUSTOMER">
         <main class="flex-1">
             <!-- Page title & actions -->
             <div
@@ -8,7 +8,7 @@
                 <h1
                     class="text-lg font-bold leading-6 text-gray-900 sm:truncate"
                 >
-                    Archived and Unresolved
+                    Your Resolved Issues
                 </h1>
             </div>
 
@@ -210,6 +210,7 @@ import IssuesService from '../services/Issues'
 //import { io } from 'socket.io-client'
 
 export default {
+    name: 'UserHome',
     components: {
         ChevronRightIcon,
     },
@@ -226,13 +227,23 @@ export default {
         })
         const loading = ref(false)
 
+        const admin = computed(() => {
+            if (store.getters['auth/user'].role === 'CUSTOMER') {
+                return true
+            } else {
+                return false
+            }
+        })
         onMounted(() => {
+            if (admin.value == false) {
+                router.push('/Dashboard')
+            }
             FETCH_ISSUES(store.getters['auth/user'].pk)
         })
         async function FETCH_ISSUES(id) {
             try {
                 loading.value = true
-                const response = await IssuesService.getAll('PENDING')
+                const response = await IssuesService.getbyCustomer(id, 'CLOSED')
                 console.log(response.data.data)
                 issues.value = response.data.data
                 loading.value = false

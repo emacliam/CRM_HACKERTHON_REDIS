@@ -18,8 +18,8 @@
                     class="grid grid-cols-1 gap-4 mt-3 sm:gap-6 sm:grid-cols-2 xl:grid-cols-4"
                 >
                     <li
-                        v-for="project in 2"
-                        :key="project"
+                        v-for="ISSUE in 2"
+                        :key="ISSUE"
                         class="relative flex col-span-1 rounded-md shadow-sm"
                     >
                         <div
@@ -101,8 +101,16 @@
                     role="list"
                     class="mt-3 border-t border-gray-200 divide-y divide-gray-100"
                 >
-                    <li v-for="project in issues" :key="project.pk">
+                    <li
+                        v-for="ISSUE in issues.filter(
+                            (iss) =>
+                                iss.issue_status !== 'CLOSED' &&
+                                iss.issue_status !== 'PENDING'
+                        )"
+                        :key="ISSUE.pk"
+                    >
                         <a
+                            @click="JOIN_ROOM(ISSUE.pk, ISSUE)"
                             href="#"
                             class="flex items-center justify-between px-4 py-4 group hover:bg-gray-50 sm:px-6"
                         >
@@ -110,7 +118,7 @@
                                 <span
                                     class="text-sm font-medium leading-6 truncate"
                                 >
-                                    {{ project.subject }}
+                                    {{ ISSUE.subject }}
                                 </span>
                             </span>
                             <ChevronRightIcon
@@ -120,6 +128,9 @@
                         </a>
                     </li>
                 </ul>
+                <div v-if="issues.length == 0" class="text-center">
+                    <span>No issues found</span>
+                </div>
             </div>
 
             <!-- Projects table (small breakpoint and up) -->
@@ -148,21 +159,26 @@
                                 <th
                                     class="py-3 pr-6 text-xs font-medium tracking-wider text-right text-gray-500 uppercase border-b border-gray-200 bg-gray-50"
                                 />
-                                <th
-                                    class="py-3 pr-6 text-xs font-medium tracking-wider text-right text-gray-500 uppercase border-b border-gray-200 bg-gray-50"
-                                />
-                                <th
-                                    class="py-3 pr-6 text-xs font-medium tracking-wider text-right text-gray-500 uppercase border-b border-gray-200 bg-gray-50"
-                                />
                             </tr>
                         </thead>
+
                         <tbody class="bg-white divide-y divide-gray-100">
                             <tr
-                                v-for="project in issues"
-                                :key="project.pk"
-                                class="cursor-pointer hover:bg-gray-100"
+                                v-for="(ISSUE, index) in issues.filter(
+                                    (iss) =>
+                                        iss.issue_status !== 'CLOSED' &&
+                                        iss.issue_status !== 'PENDING'
+                                )"
+                                :key="ISSUE.pk"
+                                class="cursor-pointer"
+                                :class="
+                                    index !== 0
+                                        ? 'bg-gray-100'
+                                        : 'border-l-[12px] border-green-500 hover:bg-green-100'
+                                "
                             >
                                 <td
+                                    key=""
                                     class="w-full px-6 py-3 text-sm font-medium text-gray-900 max-w-0 whitespace-nowrap"
                                 >
                                     <div
@@ -173,7 +189,7 @@
                                             class="truncate hover:text-gray-600"
                                         >
                                             <span>
-                                                {{ project.subject }}
+                                                {{ ISSUE.subject }}
                                             </span>
                                         </a>
                                     </div>
@@ -189,7 +205,7 @@
                                             class="truncate hover:text-gray-600"
                                         >
                                             <span>
-                                                {{ project.description }}
+                                                {{ ISSUE.description }}
                                             </span>
                                         </a>
                                     </div>
@@ -198,21 +214,22 @@
                                 <td
                                     class="hidden px-6 py-3 text-sm text-right text-gray-500 md:table-cell whitespace-nowrap"
                                 >
-                                    {{ project.created_at }}
+                                    {{ ISSUE.created_at }}
                                 </td>
                                 <td
                                     class="px-6 py-3 text-sm font-medium text-right whitespace-nowrap"
                                 >
                                     <a
-                                        @click="JOIN_ROOM(project.pk)"
+                                        v-if="index == 0"
+                                        @click="JOIN_ROOM(ISSUE.pk, ISSUE)"
                                         class="text-indigo-600 hover:text-indigo-900"
                                         >Go to Chat</a
                                     >
                                 </td>
-                                <td
+                                <!--  <td
                                     class="px-6 py-3 text-sm font-medium text-right whitespace-nowrap"
                                 >
-                                    <Modal title="Add Member">
+                                    <Modal v-if="index == 0" title="Add Member">
                                         <form action="" class="w-[430px] mb-4">
                                             <select
                                                 name=""
@@ -230,7 +247,10 @@
                                 <td
                                     class="px-6 py-3 text-sm font-medium text-right whitespace-nowrap"
                                 >
-                                    <Modal title="Invite a Member">
+                                    <Modal
+                                        v-if="index == 0"
+                                        title="Invite a Member"
+                                    >
                                         <form action="" class="w-[430px] mb-4">
                                             <select
                                                 name=""
@@ -244,10 +264,13 @@
                                             </select>
                                         </form>
                                     </Modal>
-                                </td>
+                                </td> -->
                             </tr>
                         </tbody>
                     </table>
+                    <div v-if="issues.length == 0" class="text-center">
+                        <span>No issues found</span>
+                    </div>
                 </div>
             </div>
         </main>
@@ -467,9 +490,10 @@ const ACTIVE_REPS = [
         bgColorClass: 'bg-green-600',
     },
 ]
-const pinnedProjects = ISS.filter((project) => project.pinned)
+const pinnedProjects = ISS.filter((ISSUE) => ISSUE.pinned)
 import IssuesService from '../services/Issues'
-const socket = io('ws://10.15.20.184:5000')
+import { url } from '../../config.js'
+const socket = io('ws://' + url)
 
 export default {
     name: 'HomePage',
@@ -582,9 +606,11 @@ export default {
             }
         }
         const receive_id = ref('')
-        async function JOIN_ROOM(id) {
+        async function JOIN_ROOM(id, issue) {
             receive_id.value = id
+            await store.dispatch('issue/Save_Issue', issue)
             try {
+                await CHANGE_ISSUE_STATUS(id, 'PROGRESS')
                 const data = {
                     issue_id: id,
                     user_id: store.state.auth.user.pk,

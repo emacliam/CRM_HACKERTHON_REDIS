@@ -34,6 +34,11 @@
 
                                         <span class="hidden space-x-3 lg:flex">
                                             <button
+                                                @click="
+                                                    CHANGE_ISSUE_STATUS(
+                                                        'PENDING'
+                                                    )
+                                                "
                                                 type="button"
                                                 class="relative items-center hidden px-4 py-2 -ml-px text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-md sm:inline-flex hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
                                             >
@@ -44,6 +49,11 @@
                                                 <span>Archive</span>
                                             </button>
                                             <button
+                                                @click="
+                                                    CHANGE_ISSUE_STATUS(
+                                                        'CLOSED'
+                                                    )
+                                                "
                                                 type="button"
                                                 class="relative items-center hidden px-4 py-2 -ml-px text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-md sm:inline-flex hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
                                             >
@@ -94,7 +104,11 @@
                                                             v-slot="{ active }"
                                                         >
                                                             <a
-                                                                href="#"
+                                                                @click="
+                                                                    CHANGE_ISSUE_STATUS(
+                                                                        'PENDING'
+                                                                    )
+                                                                "
                                                                 :class="[
                                                                     active
                                                                         ? 'bg-gray-100 text-gray-900'
@@ -109,7 +123,11 @@
                                                             v-slot="{ active }"
                                                         >
                                                             <a
-                                                                href="#"
+                                                                @click="
+                                                                    CHANGE_ISSUE_STATUS(
+                                                                        'CLOSED'
+                                                                    )
+                                                                "
                                                                 :class="[
                                                                     active
                                                                         ? 'bg-gray-100 text-gray-900'
@@ -148,11 +166,14 @@
                                     id="message-heading"
                                     class="text-lg font-medium text-gray-900"
                                 >
-                                    {{ message.subject }}
+                                    Issue Title:
+                                    <span class="text-gray-500">{{
+                                        ISSUE_DATA.subject
+                                    }}</span>
                                 </h1>
-                                <p class="mt-1 text-sm text-gray-500 truncate">
+                                <!--   <p class="mt-1 text-sm text-gray-500 truncate">
                                     {{ message.sender }}
-                                </p>
+                                </p> -->
                             </div>
 
                             <div
@@ -161,7 +182,7 @@
                                 <span
                                     class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-cyan-100 text-cyan-800"
                                 >
-                                    {{ message.status }}
+                                    {{ ISSUE_DATA.issue_status }}
                                 </span>
                                 <Menu
                                     as="div"
@@ -216,6 +237,12 @@
                         </div>
                     </div>
                     <!-- Thread section-->
+                    <div
+                        class="grid place-items-center"
+                        v-if="messages.length === 0"
+                    >
+                        <span>No messages </span>
+                    </div>
                     <ul
                         role="list"
                         class="py-4 space-y-2 sm:px-6 sm:space-y-4 lg:px-8"
@@ -229,11 +256,25 @@
                                 class="sm:flex sm:justify-between sm:items-baseline"
                             >
                                 <h3 class="text-base font-medium">
-                                    <span class="text-gray-900">{{
-                                        item.sender
-                                    }}</span>
+                                    <span
+                                        v-if="
+                                            item.sender_data.pk ==
+                                            store.state.auth.user.pk
+                                        "
+                                        class="text-gray-600"
+                                    >
+                                        You
+                                    </span>
+
+                                    <span v-else class="text-gray-900"
+                                        >From:
+                                        {{
+                                            item.sender_data.first_name +
+                                            ' ' +
+                                            item.sender_data.last_name
+                                        }}</span
+                                    >
                                     {{ ' ' }}
-                                    <span class="text-gray-600">wrote</span>
                                 </h3>
                                 <p
                                     class="mt-1 text-sm text-gray-600 whitespace-nowrap sm:mt-0 sm:ml-3"
@@ -260,6 +301,7 @@
                             id=""
                             cols="30"
                             rows="10"
+                            placeholder="Type Your Message Here"
                             class="w-3/4 h-16 bg-gray-100 border-gray-300 rounded-lg resize-none focus:border-0"
                         ></textarea>
                     </div>
@@ -281,7 +323,7 @@
 </template>
 
 <script>
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import {
     Dialog,
     DialogOverlay,
@@ -385,7 +427,8 @@ const message = {
 import MessageService from '../services/message'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
-const socket = io('ws://10.15.20.184:5000')
+import { url } from '../../config.js'
+const socket = io('ws://' + url)
 
 export default {
     components: {
@@ -415,7 +458,6 @@ export default {
         const store = useStore()
 
         onMounted(() => {
-            console.log(route.params.id)
             if (!route.params.id) {
                 router.go(-1)
             }
@@ -429,32 +471,30 @@ export default {
                 console.log('connected false')
             })
 
-            socket.on('change-issue-status-response', (response) => {
-                //TODO: CHECK RESPONSE STATUS
-                console.log('issue status changed')
-            })
-
             socket.on('receive-message', (response) => {
                 sending_message.value = false
-                console.log(response.data)
+                if (
+                    response.status_code == '200' &&
+                    response.data.issue === route.params.id
+                ) {
+                    messages.value.push(response.data)
+                }
             })
 
             socket.on('leave-room-response', (response) => {
                 //TODO: CHECK RESPONSE STATUS
-                console.log(response.data)
+                /* console.log(response.data) */
             })
         })
 
         onUnmounted(() => {
             socket.close()
-            LEAVE_ROOM()
         })
 
         async function FETCH_MESSAGES(ID) {
             try {
                 loading.value = true
                 const response = await MessageService.getAll(ID)
-                console.log(response.data.data)
                 messages.value = response.data.data
                 loading.value = false
             } catch (error) {
@@ -472,15 +512,13 @@ export default {
                 sending_message.value = true
                 const data = {
                     issue: route.params.id,
+                    issue_data: store.state.issue.Issue,
                     sender: store.state.auth.user.pk,
+                    sender_data: store.state.auth.user,
                     message_body: message_body.value,
                 }
 
-                console.log(data)
-
-                socket.emit('send-message', data, (data) => {
-                    console.log(data)
-                })
+                socket.emit('send-message', data, (data) => {})
             } catch (error) {
                 sending_message.value = false
                 console.log(error)
@@ -497,25 +535,24 @@ export default {
                     last_name: store.state.auth.user.last_name,
                 }
                 loading.value = true
-                socket.emit('leave-room', data, (data) => {
-                    console.log(data)
-                })
+                socket.emit('leave-room', data, (data) => {})
             } catch (error) {
                 loading.value = false
                 console.log(error)
             }
         }
 
-        async function CHANGE_ISSUE_STATUS(id, status) {
+        async function CHANGE_ISSUE_STATUS(status) {
             try {
                 const data = {
-                    issue_id: id,
+                    issue_id: route.params.id,
                     issue_status: status,
                 }
                 loading.value = true
-                socket.emit('change-issue-status', data, (data) => {
+                await socket.emit('change-issue-status', data, (data) => {
                     console.log(data)
                 })
+                router.push('/Dashboard')
             } catch (error) {
                 loading.value = false
                 console.log(error)
@@ -530,8 +567,12 @@ export default {
             sending_message,
             open,
             router,
+            route,
+            store,
             loading,
             SEND_MESSAGE,
+            CHANGE_ISSUE_STATUS,
+            ISSUE_DATA: computed(() => store.getters['issue/Issue']),
         }
     },
 }
