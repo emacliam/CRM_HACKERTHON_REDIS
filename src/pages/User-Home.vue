@@ -91,7 +91,13 @@
                     role="list"
                     class="mt-3 border-t border-gray-200 divide-y divide-gray-100"
                 >
-                    <li v-for="project in issues" :key="project.pk">
+                    <li
+                        v-for="project in issues"
+                        :key="project.pk"
+                        :class="
+                            active.includes(project.pk) ? 'bg-pink-100' : ''
+                        "
+                    >
                         <a
                             href="#"
                             class="flex items-center justify-between px-4 py-4 group hover:bg-gray-50 sm:px-6"
@@ -147,6 +153,11 @@
                                 v-for="project in issues"
                                 :key="project.pk"
                                 class="cursor-pointer hover:bg-gray-100"
+                                :class="
+                                    active.includes(project.pk)
+                                        ? 'bg-pink-100'
+                                        : ''
+                                "
                             >
                                 <td
                                     class="w-full px-6 py-3 text-sm font-medium text-gray-900 max-w-0 whitespace-nowrap"
@@ -190,6 +201,7 @@
                                     class="px-6 py-3 text-sm font-medium text-right whitespace-nowrap"
                                 >
                                     <a
+                                        v-if="active.includes(project.pk)"
                                         @click="JOIN_ROOM(project.pk)"
                                         class="text-indigo-600 hover:text-indigo-900"
                                         >Go to Chat</a
@@ -283,6 +295,7 @@ export default {
             sender: store.state.auth.user.pk,
         })
         const loading = ref(false)
+        const chatInit = ref([])
 
         const admin = computed(() => {
             if (store.getters['auth/user'].role === 'CUSTOMER') {
@@ -314,10 +327,27 @@ export default {
             })
 
             socket.on('join-room-response', (response) => {
-                console.log(response)
-                console.log(receive_id.value)
+                //if response show go to chat and change item color else remove go to chat.
                 //TODO: CHECK RESPONSE STATUS
-                router.push(`/Chat/${receive_id.value}`)
+                console.log(response.data)
+                if (response.status_code == '200') {
+                    if (response.data.user_id === store.state.auth.user.pk) {
+                        router.push(`/Chat/${receive_id.value}`)
+                    }
+
+                    if (!chatInit.value.includes(response.data.issue_id)) {
+                        chatInit.value.push(response.data.issue_id)
+                    }
+                }
+            })
+
+            socket.on('leave-room-response', (response) => {
+                //TODO: CHECK RESPONSE STATUS
+                console.log(response.data)
+            })
+
+            socket.on('receive-message', (response) => {
+                console.log(response.data)
             })
         })
 
@@ -362,6 +392,7 @@ export default {
             try {
                 const data = {
                     issue_id: id,
+                    user_id: store.state.auth.user.pk,
                     first_name: store.state.auth.user.first_name,
                     last_name: store.state.auth.user.last_name,
                 }
@@ -384,6 +415,7 @@ export default {
             ACTIVE_REPS,
             sidebarOpen,
             NavigateToChat,
+            active: computed(() => chatInit.value),
             loading,
         }
     },

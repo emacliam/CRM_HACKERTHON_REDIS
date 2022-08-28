@@ -18,25 +18,17 @@
                                     >
                                         <span class="inline-flex sm:shadow-sm">
                                             <button
+                                                @click="
+                                                    router.push('/Dashboard')
+                                                "
                                                 type="button"
-                                                class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
+                                                class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
                                             >
                                                 <ReplyIcon
                                                     class="mr-2.5 h-5 w-5 text-gray-400"
                                                     aria-hidden="true"
                                                 />
-                                                <span>Invite</span>
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                class="relative items-center hidden px-4 py-2 -ml-px text-sm font-medium text-gray-900 bg-white border border-gray-300 sm:inline-flex rounded-r-md hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
-                                            >
-                                                <UserAddIcon
-                                                    class="mr-2.5 h-5 w-5 text-gray-400"
-                                                    aria-hidden="true"
-                                                />
-                                                <span>Assign</span>
+                                                <span>Back</span>
                                             </button>
                                         </span>
 
@@ -107,36 +99,6 @@
                                                                     active
                                                                         ? 'bg-gray-100 text-gray-900'
                                                                         : 'text-gray-700',
-                                                                    'block sm:hidden px-4 py-2 text-sm',
-                                                                ]"
-                                                            >
-                                                                Note
-                                                            </a>
-                                                        </MenuItem>
-                                                        <MenuItem
-                                                            v-slot="{ active }"
-                                                        >
-                                                            <a
-                                                                href="#"
-                                                                :class="[
-                                                                    active
-                                                                        ? 'bg-gray-100 text-gray-900'
-                                                                        : 'text-gray-700',
-                                                                    'block sm:hidden px-4 py-2 text-sm',
-                                                                ]"
-                                                            >
-                                                                Assign
-                                                            </a>
-                                                        </MenuItem>
-                                                        <MenuItem
-                                                            v-slot="{ active }"
-                                                        >
-                                                            <a
-                                                                href="#"
-                                                                :class="[
-                                                                    active
-                                                                        ? 'bg-gray-100 text-gray-900'
-                                                                        : 'text-gray-700',
                                                                     'block px-4 py-2 text-sm',
                                                                 ]"
                                                             >
@@ -155,7 +117,7 @@
                                                                     'block px-4 py-2 text-sm',
                                                                 ]"
                                                             >
-                                                                Move
+                                                                Close
                                                             </a>
                                                         </MenuItem>
                                                     </div>
@@ -164,41 +126,17 @@
                                         </Menu>
                                     </span>
                                 </div>
-
-                                <!-- Right buttons -->
-                                <nav aria-label="Pagination">
-                                    <span
-                                        class="relative z-0 inline-flex rounded-md shadow-sm"
-                                    >
-                                        <a
-                                            href="#"
-                                            class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
-                                        >
-                                            <span class="sr-only">Next</span>
-                                            <ChevronUpIcon
-                                                class="w-5 h-5"
-                                                aria-hidden="true"
-                                            />
-                                        </a>
-                                        <a
-                                            href="#"
-                                            class="relative inline-flex items-center px-4 py-2 -ml-px text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
-                                        >
-                                            <span class="sr-only"
-                                                >Previous</span
-                                            >
-                                            <ChevronDownIcon
-                                                class="w-5 h-5"
-                                                aria-hidden="true"
-                                            />
-                                        </a>
-                                    </span>
-                                </nav>
                             </div>
                         </div>
                     </div>
                     <!-- Message header -->
                 </div>
+                <ProgressSpinner
+                    v-if="loading"
+                    style="width: 20px; height: 20px"
+                    strokeWidth="8"
+                    animationDuration=".5s"
+                />
 
                 <div class="flex-1 min-h-0 mb-24 overflow-y-auto">
                     <div class="pt-5 pb-6 bg-white shadow">
@@ -283,8 +221,8 @@
                         class="py-4 space-y-2 sm:px-6 sm:space-y-4 lg:px-8"
                     >
                         <li
-                            v-for="item in message.items"
-                            :key="item.id"
+                            v-for="item in messages"
+                            :key="item.pk"
                             class="px-4 py-6 bg-white shadow sm:rounded-lg sm:px-6"
                         >
                             <div
@@ -292,7 +230,7 @@
                             >
                                 <h3 class="text-base font-medium">
                                     <span class="text-gray-900">{{
-                                        item.author
+                                        item.sender
                                     }}</span>
                                     {{ ' ' }}
                                     <span class="text-gray-600">wrote</span>
@@ -300,30 +238,43 @@
                                 <p
                                     class="mt-1 text-sm text-gray-600 whitespace-nowrap sm:mt-0 sm:ml-3"
                                 >
-                                    <time :datetime="item.datetime">{{
-                                        item.date
-                                    }}</time>
+                                    <time>{{ item.created_at }}</time>
                                 </p>
                             </div>
                             <div
                                 class="mt-4 space-y-6 text-sm text-gray-800"
-                                v-html="item.body"
+                                v-html="item.message_body"
                             />
                         </li>
                     </ul>
                 </div>
-                <div class="absolute bottom-0 w-full px-8 py-4 h-28">
+                <div
+                    class="absolute bottom-0 flex items-center w-full px-8 py-4 space-x-4 h-28"
+                >
                     <div
                         class="flex items-center w-full h-full px-8 rounded-lg shadow"
                     >
                         <textarea
                             name=""
+                            v-model="message_body"
                             id=""
                             cols="30"
                             rows="10"
                             class="w-3/4 h-16 bg-gray-100 border-gray-300 rounded-lg resize-none focus:border-0"
                         ></textarea>
                     </div>
+                    <span
+                        class="p-4 font-bold text-white rounded-lg bg-primary-light"
+                        @click="SEND_MESSAGE()"
+                    >
+                        Send
+                        <ProgressSpinner
+                            v-if="sending_message"
+                            style="width: 20px; height: 20px"
+                            strokeWidth="8"
+                            animationDuration=".5s"
+                        />
+                    </span>
                 </div>
             </section></main
     ></Container>
@@ -432,7 +383,8 @@ const message = {
     ],
 }
 import MessageService from '../services/message'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useStore } from 'vuex'
 const socket = io('ws://10.15.20.184:5000')
 
 export default {
@@ -441,17 +393,11 @@ export default {
         MenuButton,
         MenuItem,
         MenuItems,
-
         ArchiveIconSolid,
-
         ChevronDownIcon,
-        ChevronUpIcon,
         DotsVerticalIcon,
         FolderDownloadIcon,
-
         ReplyIcon,
-
-        UserAddIcon,
     },
 
     data() {
@@ -461,11 +407,18 @@ export default {
     setup() {
         const open = ref(false)
         const messages = ref([])
+        const message_body = ref('')
         const MESSAGE = ref([])
         const route = useRoute()
         const loading = ref(false)
+        const router = useRouter()
+        const store = useStore()
 
         onMounted(() => {
+            console.log(route.params.id)
+            if (!route.params.id) {
+                router.go(-1)
+            }
             FETCH_MESSAGES(route.params.id)
             socket.on('connect', () => {
                 console.log(socket.connected)
@@ -481,13 +434,20 @@ export default {
                 console.log('issue status changed')
             })
 
-            socket.on('receive_message', (response) => {
+            socket.on('receive-message', (response) => {
+                sending_message.value = false
+                console.log(response.data)
+            })
+
+            socket.on('leave-room-response', (response) => {
+                //TODO: CHECK RESPONSE STATUS
                 console.log(response.data)
             })
         })
 
         onUnmounted(() => {
             socket.close()
+            LEAVE_ROOM()
         })
 
         async function FETCH_MESSAGES(ID) {
@@ -495,22 +455,65 @@ export default {
                 loading.value = true
                 const response = await MessageService.getAll(ID)
                 console.log(response.data.data)
+                messages.value = response.data.data
                 loading.value = false
             } catch (error) {
                 loading.value = false
                 console.log(error)
             }
         }
+        const sending_message = ref(false)
+        async function SEND_MESSAGE() {
+            if (message_body.value == null) {
+                sending_message.value = false
+                return
+            }
+            try {
+                sending_message.value = true
+                const data = {
+                    issue: route.params.id,
+                    sender: store.state.auth.user.pk,
+                    message_body: message_body.value,
+                }
 
-        async function SEND_MESSAGE(id) {
+                console.log(data)
+
+                socket.emit('send-message', data, (data) => {
+                    console.log(data)
+                })
+            } catch (error) {
+                sending_message.value = false
+                console.log(error)
+            }
+        }
+
+        async function LEAVE_ROOM() {
+            console.log('leaving romm emit')
+            try {
+                const data = {
+                    issue_id: route.params.id,
+                    user_id: store.state.auth.user.pk,
+                    first_name: store.state.auth.user.first_name,
+                    last_name: store.state.auth.user.last_name,
+                }
+                loading.value = true
+                socket.emit('leave-room', data, (data) => {
+                    console.log(data)
+                })
+            } catch (error) {
+                loading.value = false
+                console.log(error)
+            }
+        }
+
+        async function CHANGE_ISSUE_STATUS(id, status) {
             try {
                 const data = {
                     issue_id: id,
-                    sender: store.state.auth.user.pk,
-                    message_body: MESSAGE.value,
+                    issue_status: status,
                 }
                 loading.value = true
-                socket.emit('send_message', data, (data) => {
+                socket.emit('change-issue-status', data, (data) => {
                     console.log(data)
                 })
             } catch (error) {
@@ -522,7 +525,11 @@ export default {
         return {
             sidebarNavigation,
             message,
+            messages,
+            message_body,
+            sending_message,
             open,
+            router,
             loading,
             SEND_MESSAGE,
         }

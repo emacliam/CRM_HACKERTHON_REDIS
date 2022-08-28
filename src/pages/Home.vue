@@ -525,7 +525,20 @@ export default {
 
             socket.on('join-room-response', (response) => {
                 //TODO: CHECK RESPONSE STATUS
-                router.push(`/Chat/${receive_id.value}`)
+                console.log(response.data.user_id)
+                if (response.data.user_id === store.state.auth.user.pk) {
+                    router.push(`/Chat/${receive_id.value}`)
+                }
+            })
+
+            socket.on('leave-room-response', (response) => {
+                //TODO: CHECK RESPONSE STATUS
+                console.log('leave room chat')
+                console.log(response.data)
+            })
+
+            socket.on('receive-message', (response) => {
+                console.log(response.data)
             })
         })
 
@@ -574,6 +587,7 @@ export default {
             try {
                 const data = {
                     issue_id: id,
+                    user_id: store.state.auth.user.pk,
                     first_name: store.state.auth.user.first_name,
                     last_name: store.state.auth.user.last_name,
                 }
